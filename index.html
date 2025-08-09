@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Advanced Scientific Calculator</title>
+<style>
+  :root{
+    --bg:#0f1720; --panel:#0b1020; --accent:#06b6d4; --muted:#94a3b8;
+    --btn:#111827; --btn-hover:#1f2937; --danger:#ef4444; --ok:#10b981;
+    --btn-func1:#f59e42; --btn-func2:#f472b6; --btn-func3:#a3e635; --btn-func4:#818cf8;
+    --btn-func5:#fbbf24; --btn-func6:#38bdf8; --btn-func7:#f87171; --btn-func8:#34d399;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    /* Animated background gradient */
+    background: linear-gradient(120deg, #0f1720, #020617, #0b1020, #06b6d4 80%);
+    background-size: 200% 200%;
+    animation: bgmove 12s ease-in-out infinite;
+    color:#e6eef6;
+    font-family:Inter, Roboto, Arial, sans-serif;
+    padding:20px;
+  }
+  @keyframes bgmove {
+    0% {background-position:0% 50%;}
+    50% {background-position:100% 50%;}
+    100% {background-position:0% 50%;}
+  }
+  .calc {
+    width: 380px;
+    max-width:96vw;
+    /* Remove background gradient and apply dark+red effects */
+    background: #18141c;
+    border-radius:14px;
+    padding:16px;
+    box-shadow:
+      0 10px 30px rgba(23,6,23,0.7),
+      0 0 0 4px #ef4444,
+      0 0 24px 0 #ef4444,
+      inset 0 1px 0 rgba(255,255,255,0.02);
+    position:relative;
+    z-index:1;
+    overflow:hidden;
+  }
+  .calc::before {
+    content:'';
+    position:absolute;
+    inset:-3px;
+    border-radius:16px;
+    z-index:-1;
+    background:conic-gradient(
+      from 0deg,
+      #06b6d4,
+      #0ea5e9,
+      #818cf8,
+      #f472b6,
+      #f59e42,
+      #a3e635,
+      #fbbf24,
+      #38bdf8,
+      #f87171,
+      #34d399,
+      #ef4444,
+      #7f1d1d,
+      #06b6d4 100%
+    );
+    filter:blur(6px) brightness(1.2);
+    opacity:0.45;
+    animation: borderGlow 6s linear infinite;
+    /* Add color shadow effects for border */
+    box-shadow:
+      0 0 24px 4px #06b6d4,
+      0 0 32px 8px #ef4444,
+      0 0 48px 8px #818cf8,
+      0 0 64px 12px #f472b6,
+      0 0 80px 16px #a3e635,
+      0 0 96px 20px #fbbf24,
+      0 0 112px 24px #38bdf8,
+      0 0 128px 28px #f87171,
+      0 0 144px 32px #34d399,
+      0 0 160px 36px #7f1d1d,
+      0 0 176px 40px #f43f5e,
+      0 0 192px 44px #f472b6,
+      0 0 208px 48px #a21caf,
+      0 0 224px 52px #f59e42,
+      0 0 240px 56px #fde047,
+      0 0 256px 60px #22d3ee,
+      0 0 272px 64px #16a34a,
+      0 0 288px 68px #fbbf24,
+      0 0 304px 72px #0ea5e9,
+      0 0 320px 76px #eab308;
+  }
+  #display{
+    width:100%;
+    height:64px;
+    border-radius:10px;
+    border:0;
+    background:transparent;
+    color:inherit;
+    font-size:1.5rem;
+    text-align:right;
+    padding:10px 12px;
+    outline:none;
+    box-shadow: 
+      0 0 0 2px rgba(6,182,212,0.08),
+      0 2px 16px 0 rgba(6,182,212,0.10),
+      0 0 32px 0 rgba(6,182,212,0.08),
+      0 0 0 0 transparent;
+    letter-spacing:0.6px;
+    /* Animated shadow */
+    animation: displayShadow 3s ease-in-out infinite alternate;
+  }
+  @keyframes displayShadow {
+    0% { box-shadow: 0 0 0 2px rgba(6,182,212,0.08), 0 2px 16px 0 rgba(6,182,212,0.10), 0 0 32px 0 rgba(6,182,212,0.08);}
+    100% { box-shadow: 0 0 0 4px rgba(6,182,212,0.16), 0 4px 24px 0 rgba(6,182,212,0.18), 0 0 48px 0 rgba(6,182,212,0.14);}
+  }
+  .grid {
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap:8px;
+    margin-top:12px;
+  }
+  button {
+    background:var(--btn);
+    border:0;
+    color:inherit;
+    padding:14px 8px;
+    font-size:0.95rem;
+    border-radius:10px;
+    cursor:pointer;
+    transition:transform .07s cubic-bezier(.4,2,.6,1), background .12s, box-shadow .18s;
+    box-shadow: 0 3px 8px rgba(2,6,23,0.6);
+    position:relative;
+    overflow:hidden;
+    outline:none;
+  }
+  /* Colorful function buttons by nth-child for variety */
+  .func:nth-of-type(1)  { background:linear-gradient(180deg,var(--btn-func1),var(--btn)); color:#fff; }
+  .func:nth-of-type(2)  { background:linear-gradient(180deg,var(--btn-func2),var(--btn)); color:#fff; }
+  .func:nth-of-type(3)  { background:linear-gradient(180deg,var(--btn-func3),var(--btn)); color:#222; }
+  .func:nth-of-type(4)  { background:linear-gradient(180deg,var(--btn-func4),var(--btn)); color:#fff; }
+  .func:nth-of-type(5)  { background:linear-gradient(180deg,var(--btn-func5),var(--btn)); color:#222; }
+  .func:nth-of-type(6)  { background:linear-gradient(180deg,var(--btn-func6),var(--btn)); color:#222; }
+  .func:nth-of-type(7)  { background:linear-gradient(180deg,var(--btn-func7),var(--btn)); color:#fff; }
+  .func:nth-of-type(8)  { background:linear-gradient(180deg,var(--btn-func8),var(--btn)); color:#222; }
+  button:active{ transform: scale(0.97); filter:brightness(1.15);}
+  button:hover{ background:var(--btn-hover); filter:brightness(1.12);}
+  .span2 { grid-column: span 2; }
+  .clear { background:var(--danger); color:white; font-weight:600; }
+  .equal { background:var(--ok); color:white; font-weight:700; grid-column: span 1; }
+  .func { background:linear-gradient(180deg,#0f1724,#0b1320); color:var(--muted); }
+  .small { font-size:0.82rem; color:var(--muted); }
+  .footer { margin-top:10px; text-align:center; color:var(--muted); font-size:0.8rem; }
+
+  /* Ripple animation for buttons */
+  .ripple {
+    position:absolute;
+    border-radius:50%;
+    transform:scale(0);
+    animation:ripple 0.5s linear;
+    background: radial-gradient(circle, #06b6d4 0%, #818cf8 60%, transparent 100%);
+    pointer-events:none;
+    z-index:2;
+  }
+  @keyframes ripple {
+    to {
+      transform:scale(2.5);
+      opacity:0;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="calc" role="application" aria-label="Advanced scientific calculator">
+    <input id="display" type="text" readonly value="0" aria-label="Calculator display" />
+    <div class="grid" id="buttons">
+      <button class="clear" onclick="clearAll()">C</button>
+      <button onclick="appendToken('(', '(')">(</button>
+      <button onclick="appendToken(')', ')')">)</button>
+      <button onclick="appendToken('^', '**')">xʸ</button>
+      <button onclick="appendToken('÷', '/')">÷</button>
+
+      <button onclick="appendToken('7')">7</button>
+      <button onclick="appendToken('8')">8</button>
+      <button onclick="appendToken('9')">9</button>
+      <button onclick="appendToken('×', '*')">×</button>
+      <button onclick="appendToken('√(', 'sqrt(')">√</button>
+
+      <button onclick="appendToken('4')">4</button>
+      <button onclick="appendToken('5')">5</button>
+      <button onclick="appendToken('6')">6</button>
+      <button onclick="appendToken('-', '-')">−</button>
+      <button onclick="appendToken('log(', 'log(')">log</button>
+
+      <button onclick="appendToken('1')">1</button>
+      <button onclick="appendToken('2')">2</button>
+      <button onclick="appendToken('3')">3</button>
+      <button onclick="appendToken('+', '+')">+</button>
+      <button onclick="appendToken('ln(', 'ln(')">ln</button>
+
+      <button onclick="appendToken('0')">0</button>
+      <button onclick="appendToken('.', '.')">.</button>
+      <button onclick="appendToken('sin(', 'sin(')">sin°</button>
+      <button onclick="appendToken('cos(', 'cos(')">cos°</button>
+      <button onclick="appendToken('tan(', 'tan(')">tan°</button>
+
+      <button onclick="appendToken('π', 'PI')">π</button>
+      <button onclick="appendToken('e', 'E')">e</button>
+      <button onclick="appendToken('pow(', 'pow(')">pow()</button>
+      <button onclick="backspace()">⌫</button>
+      <button class="equal" onclick="calculate()">=</button>
+
+      <button class="func" onclick="applyFactorial()">n!</button>
+      <button class="func" onclick="applyPercent()">%</button>
+      <button class="func" onclick="appendToken('abs(', 'abs(')">abs()</button>
+      <button class="func" onclick="appendToken('floor(', 'floor(')">floor()</button>
+      <button class="func" onclick="appendToken('ceil(', 'ceil(')">ceil()</button>
+      <button class="func" onclick="appendToken('exp(', 'exp(')">exp()</button>
+      <button class="func" onclick="appendToken('asin(', 'asin(')">asin⁻¹</button>
+      <button class="func" onclick="appendToken('acos(', 'acos(')">acos⁻¹</button>
+      <button class="func" onclick="appendToken('atan(', 'atan(')">atan⁻¹</button>
+      <button class="func" onclick="appendToken('sinh(', 'sinh(')">sinh</button>
+      <button class="func" onclick="appendToken('cosh(', 'cosh(')">cosh</button>
+      <button class="func" onclick="appendToken('tanh(', 'tanh(')">tanh</button>
+      <button class="func" onclick="appendToken('min(', 'min(')">min()</button>
+      <button class="func" onclick="appendToken('max(', 'max(')">max()</button>
+      <button class="func" onclick="appendToken('round(', 'round(')">round()</button>
+      <button class="func" onclick="appendToken('deg2rad(', 'deg2rad(')">deg→rad</button>
+      <button class="func" onclick="appendToken('rad2deg(', 'rad2deg(')">rad→deg</button>
+      <button class="func" onclick="appendToken('sign(', 'sign(')">sign()</button>
+      <button class="func" onclick="appendToken('trunc(', 'trunc(')">trunc()</button>
+      <button class="func" onclick="appendToken('cbrt(', 'cbrt(')">cbrt()</button>
+      <button class="func" onclick="appendToken('hypot(', 'hypot(')">hypot()</button>
+      <button class="func" onclick="appendToken('clz32(', 'clz32(')">clz32()</button>
+      <button class="func" onclick="appendToken('fround(', 'fround(')">fround()</button>
+      <button class="func" onclick="appendToken('log2(', 'log2(')">log2()</button>
+      <button class="func" onclick="appendToken('log1p(', 'log1p(')">log1p()</button>
+      <button class="func" onclick="appendToken('expm1(', 'expm1(')">expm1()</button>
+      <button class="func" onclick="appendToken('random()', 'random()')">random()</button>
+      <button class="func" onclick="appendToken('toFixed(', 'toFixed(')">toFixed()</button>
+      <button class="func" onclick="appendToken('toExponential(', 'toExponential(')">toExp()</button>
+      <!-- More realistic/scientific functions -->
+      <button class="func" onclick="appendToken('mod(', 'mod(')">mod()</button>
+      <button class="func" onclick="appendToken('gcd(', 'gcd(')">gcd()</button>
+      <button class="func" onclick="appendToken('lcm(', 'lcm(')">lcm()</button>
+      <button class="func" onclick="appendToken('isPrime(', 'isPrime(')">isPrime()</button>
+      <button class="func" onclick="appendToken('nthRoot(', 'nthRoot(')">nthRoot()</button>
+      <button class="func" onclick="appendToken('degrees(', 'degrees(')">degrees()</button>
+      <button class="func" onclick="appendToken('radians(', 'radians(')">radians()</button>
+      <button class="func" onclick="appendToken('cube(', 'cube(')">cube()</button>
+      <button class="func" onclick="appendToken('square(', 'square(')">square()</button>
+      <button class="func" onclick="appendToken('reciprocal(', 'reciprocal(')">1/x</button>
+      <button class="func" onclick="appendToken('percentOf(', 'percentOf(')">% of</button>
+      <button class="func" onclick="appendToken('average(', 'average(')">avg()</button>
+      <button class="func" onclick="appendToken('median(', 'median(')">median()</button>
+      <button class="func" onclick="appendToken('mode(', 'mode(')">mode()</button>
+    </div>
+
+    <div class="footer small">sin/cos/tan expect degrees. Use <strong>log</strong> for base-10, <strong>ln</strong> for natural log.</div>
+  </div>
+
+<script>
+  // Two synchronized expressions:
+  // displayExpr: what user sees (nice tokens like π, ×)
+  // evalExpr: javascript-compatible tokens (PI, *, Math functions via injected names)
+  let displayExpr = '';
+  let evalExpr = '';
+
+  const display = document.getElementById('display');
+
+  function updateDisplay(){
+    display.value = displayExpr || '0';
+  }
+
+  // Append token: displayToken (shown), evalToken (used for evaluation)
+  function appendToken(displayToken, evalToken = null){
+    if (evalToken === null) evalToken = displayToken;
+    displayExpr += displayToken;
+    evalExpr += evalToken;
+    updateDisplay();
+  }
+
+  function clearAll(){
+    displayExpr = '';
+    evalExpr = '';
+    updateDisplay();
+  }
+
+  function backspace(){
+    // remove one "visual char" from display and one "token char" from eval
+    // Note: tokens lengths can differ; we remove last char from both for simplicity,
+    // which works reliably for most usage because appendToken keeps both in sync for simple tokens.
+    if (!displayExpr) return;
+    displayExpr = displayExpr.slice(0, -1);
+    evalExpr = evalExpr.slice(0, -1);
+    updateDisplay();
+  }
+
+  // Factorial: wrap the last number or group with fact(...)
+  function applyFactorial(){
+    if (!evalExpr) return;
+
+    // If expression ends with ')', find matching '('
+    if (evalExpr.endsWith(')')) {
+      const start = findMatchingOpen(evalExpr);
+      if (start !== -1) {
+        const inside = evalExpr.slice(start); // includes the ')'
+        evalExpr = evalExpr.slice(0, start) + 'fact' + inside;
+        // for display, just append '!' to indicate factorial
+        displayExpr += '!';
+        updateDisplay();
+        return;
+      }
+    }
+
+    // Else if ends with a number token
+    const m = evalExpr.match(/(\d+(\.\d+)?)$/);
+    if (m) {
+      const num = m[1];
+      evalExpr = evalExpr.slice(0, -num.length) + 'fact(' + num + ')';
+      displayExpr = displayExpr.slice(0, -num.length) + num + '!';
+      updateDisplay();
+      return;
+    }
+
+    // Otherwise append 'fact(' for user to type inside
+    appendToken('fact(', 'fact(');
+  }
+
+  // Percent button: turn last number into (lastNumber / 100)
+  function applyPercent(){
+    if (!evalExpr) return;
+    const m = evalExpr.match(/(\d+(\.\d+)?)$/);
+    if (m) {
+      const num = m[1];
+      evalExpr = evalExpr.slice(0, -num.length) + '(' + num + ' / 100)';
+      displayExpr = displayExpr.slice(0, -num.length) + '(' + num + '%)';
+      updateDisplay();
+    } else {
+      // if not matched, append '/100'
+      appendToken('/100', '/100');
+    }
+  }
+
+  // Find matching '(' for the final ')' in a string (returns index of '(')
+  function findMatchingOpen(s){
+    let depth = 0;
+    for (let i = s.length - 1; i >= 0; i--){
+      if (s[i] === ')') depth++;
+      else if (s[i] === '(') {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+    return -1;
+  }
+
+  // Utility functions used in the evaluator:
+  function degToRad(x){ return x * Math.PI / 180; }
+  function rad2deg(x){ return x * 180 / Math.PI; }
+  function sin_deg(x){ return Math.sin(degToRad(x)); }
+  function cos_deg(x){ return Math.cos(degToRad(x)); }
+  function tan_deg(x){ return Math.tan(degToRad(x)); }
+  function log10(x){ return (Math.log10) ? Math.log10(x) : Math.log(x)/Math.LN10; }
+  function factorial(n){
+    // integer factorial only
+    if (typeof n !== 'number' || !isFinite(n)) return NaN;
+    if (n < 0) return NaN;
+    if (Math.floor(n) !== n) return NaN;
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+  }
+  // New functions
+  function exp(x){ return Math.exp(x); }
+  function asin(x){ return Math.asin(x) * 180 / Math.PI; }
+  function acos(x){ return Math.acos(x) * 180 / Math.PI; }
+  function atan(x){ return Math.atan(x) * 180 / Math.PI; }
+  function sinh(x){ return Math.sinh ? Math.sinh(x) : (Math.exp(x)-Math.exp(-x))/2; }
+  function cosh(x){ return Math.cosh ? Math.cosh(x) : (Math.exp(x)+Math.exp(-x))/2; }
+  function tanh(x){ return Math.tanh ? Math.tanh(x) : sinh(x)/cosh(x); }
+  function min(){ return Math.min.apply(null, arguments); }
+  function max(){ return Math.max.apply(null, arguments); }
+  function round(x){ return Math.round(x); }
+  function deg2rad(x){ return x * Math.PI / 180; }
+  function rad2deg(x){ return x * 180 / Math.PI; }
+  function sign(x){ return Math.sign(x); }
+  function trunc(x){ return Math.trunc(x); }
+  function cbrt(x){ return Math.cbrt ? Math.cbrt(x) : Math.pow(x, 1/3); }
+  function hypot(){ return Math.hypot ? Math.hypot.apply(null, arguments) : Math.sqrt([].reduce.call(arguments, (s,v)=>s+v*v,0)); }
+  function clz32(x){ return Math.clz32(x); }
+  function fround(x){ return Math.fround ? Math.fround(x) : parseFloat(x); }
+  function log2(x){ return Math.log2 ? Math.log2(x) : Math.log(x)/Math.LN2; }
+  function log1p(x){ return Math.log1p ? Math.log1p(x) : Math.log(1+x); }
+  function expm1(x){ return Math.expm1 ? Math.expm1(x) : Math.exp(x)-1; }
+  function random(){ return Math.random(); }
+  function toFixed(x, n){ return Number(x).toFixed(n); }
+  function toExponential(x, n){ return Number(x).toExponential(n); }
+  function mod(a, b) { return ((a % b) + b) % b; }
+  function gcd(a, b) {
+    a = Math.abs(a); b = Math.abs(b);
+    while (b) { let t = b; b = a % b; a = t; }
+    return a;
+  }
+  function lcm(a, b) { return Math.abs(a * b) / gcd(a, b); }
+  function isPrime(n) {
+    n = Math.floor(n);
+    if (n < 2) return false;
+    for (let i = 2; i <= Math.sqrt(n); i++) if (n % i === 0) return false;
+    return true;
+  }
+  function nthRoot(x, n) { return Math.pow(x, 1/n); }
+  function degrees(x) { return x * 180 / Math.PI; }
+  function radians(x) { return x * Math.PI / 180; }
+  function cube(x) { return x * x * x; }
+  function square(x) { return x * x; }
+  function reciprocal(x) { return 1 / x; }
+  function percentOf(a, b) { return (a / 100) * b; }
+  function average() {
+    let args = Array.from(arguments);
+    if (!args.length) return NaN;
+    return args.reduce((a, b) => a + b, 0) / args.length;
+  }
+  function median() {
+    let args = Array.from(arguments).sort((a, b) => a - b);
+    let mid = Math.floor(args.length / 2);
+    if (!args.length) return NaN;
+    return args.length % 2 ? args[mid] : (args[mid - 1] + args[mid]) / 2;
+  }
+  function mode() {
+    let args = Array.from(arguments);
+    if (!args.length) return NaN;
+    let freq = {}, max = 0, res = [];
+    args.forEach(v => { freq[v] = (freq[v] || 0) + 1; max = Math.max(max, freq[v]); });
+    for (let k in freq) if (freq[k] === max) res.push(Number(k));
+    return res.length === 1 ? res[0] : res;
+  }
+
+  // Evaluate expression safely with only allowed names injected
+  function calculate(){
+    if (!evalExpr) return;
+    // auto-close unmatched '('
+    let open = 0;
+    for (let ch of evalExpr) {
+      if (ch === '(') open++;
+      else if (ch === ')') open--;
+    }
+    if (open > 0) {
+      evalExpr += ')'.repeat(open);
+      displayExpr += ')'.repeat(open);
+    }
+
+    // Allowed identifiers (parameter names for the Function constructor)
+    const allowedNames = [
+      'sin','cos','tan','sqrt','log','ln','pow','PI','E','fact','abs','floor','ceil',
+      'exp','asin','acos','atan','sinh','cosh','tanh','min','max','round','deg2rad','rad2deg',
+      'sign','trunc','cbrt','hypot','clz32','fround','log2','log1p','expm1','random','toFixed','toExponential',
+      'mod','gcd','lcm','isPrime','nthRoot','degrees','radians','cube','square','reciprocal','percentOf','average','median','mode'
+    ];
+    const functionBody = 'return ' + evalExpr + ';';
+
+    try {
+      // Create function with those names as parameters:
+      const f = new Function(...allowedNames, functionBody);
+
+      // Call it, passing our local implementations in the same order:
+      const result = f(
+        sin_deg,    // sin
+        cos_deg,    // cos
+        tan_deg,    // tan
+        Math.sqrt,  // sqrt
+        log10,      // log (base-10)
+        Math.log,   // ln (natural log)
+        Math.pow,   // pow
+        Math.PI,    // PI
+        Math.E,     // E
+        factorial,  // fact
+        Math.abs,   // abs
+        Math.floor, // floor
+        Math.ceil,  // ceil
+        exp,        // exp
+        asin,       // asin
+        acos,       // acos
+        atan,       // atan
+        sinh,       // sinh
+        cosh,       // cosh
+        tanh,       // tanh
+        min,        // min
+        max,        // max
+        round,      // round
+        deg2rad,    // deg2rad
+        rad2deg,    // rad2deg
+        sign,       // sign
+        trunc,      // trunc
+        cbrt,       // cbrt
+        hypot,      // hypot
+        clz32,      // clz32
+        fround,     // fround
+        log2,       // log2
+        log1p,      // log1p
+        expm1,      // expm1
+        random,     // random
+        toFixed,    // toFixed
+        toExponential, // toExponential
+        mod,        // mod
+        gcd,        // gcd
+        lcm,        // lcm
+        isPrime,    // isPrime
+        nthRoot,    // nthRoot
+        degrees,    // degrees
+        radians,    // radians
+        cube,       // cube
+        square,     // square
+        reciprocal, // reciprocal
+        percentOf,  // percentOf
+        average,    // average
+        median,     // median
+        mode        // mode
+      );
+
+      // format number for display
+      if (typeof result === 'number' && isFinite(result)) {
+        // show up to 12 significant digits, drop trailing zeros
+        const text = Number(result.toPrecision(12)).toString();
+        displayExpr = text;
+        evalExpr = text;
+      } else {
+        displayExpr = String(result);
+        evalExpr = '';
+      }
+      updateDisplay();
+    } catch (err) {
+      displayExpr = 'Error';
+      evalExpr = '';
+      updateDisplay();
+      console.warn('Calc error:', err);
+    }
+  }
+
+  // keyboard support (basic)
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); calculate(); return; }
+    if (e.key === 'Backspace') { e.preventDefault(); backspace(); return; }
+    if (e.key === 'Escape') { e.preventDefault(); clearAll(); return; }
+
+    // digits and operators
+    const allowed = '0123456789.+-*/()^%';
+    if (allowed.includes(e.key)) {
+      // map for display vs eval: '*' => × (visual) but we keep simple
+      if (e.key === '*') appendToken('×', '*');
+      else if (e.key === '/') appendToken('÷', '/');
+      else if (e.key === '^') appendToken('^', '**');
+      else appendToken(e.key, e.key);
+    }
+  });
+
+  // Ripple effect for all buttons
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', function(e){
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+        ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+        btn.appendChild(ripple);
+        ripple.addEventListener('animationend', () => ripple.remove());
+      });
+    });
+  });
+
+  // Initialize
+  updateDisplay();
+</script>
+</body>
+</html>
